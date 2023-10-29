@@ -56,7 +56,7 @@ public class LibraryAPITestForUser {
 
     @Test
     void getBookByID() {
-        Response response = get("/api/books/5"); // Replace 5 with the actual book id you want to retrieve
+        Response response = get("/api/books/5"); // replace 5 with the actual bookId
         int statusCode = response.getStatusCode();
 
         if (statusCode == 200) {
@@ -109,7 +109,7 @@ public class LibraryAPITestForUser {
     void deleteBook() {
         Response response = given()
                 .when()
-                .delete("/api/books/2"); // Replace 1 with the actual bookId you want to delete
+                .delete("/api/books/2"); // replace 2 with the actual bookId
 
         int statusCode = response.getStatusCode();
 
