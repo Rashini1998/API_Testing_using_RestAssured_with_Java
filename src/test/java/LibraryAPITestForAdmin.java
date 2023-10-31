@@ -1,11 +1,8 @@
+import org.testng.Assert;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import static io.restassured.RestAssured.*;
-import static org.testng.Assert.fail;
-
 
 public class LibraryAPITestForAdmin {
 
@@ -16,107 +13,123 @@ public class LibraryAPITestForAdmin {
     }
 
     @Test
-    void createNewBook(){
+    public void createNewBook() {
         String requestBody = """
-    {
-        "id": 6,
-        "title": "Jadunama",
-        "author": "Javed Akhtar and Arvind Mandloi"
-    }
-    """;
+        {
+            "id": 1,
+            "title": "Jadunama",
+            "author": "Javed Akhtar and Arvind Mandloi"
+        }
+        """;
 
-        Response response = given()
+        Response response = RestAssured.given()
                 .contentType("application/json")
                 .body(requestBody)
                 .when()
                 .post("/api/books");
-        int statusCode =response.getStatusCode();
+
+        int statusCode = response.getStatusCode();
+        String responseBody = response.asString();
+
         if (statusCode == 208) {
-            System.out.println("Book Already Exists : " + response.getStatusCode());
-        }else if(statusCode == 201){
-            System.out.println("Successfully created the book : " + statusCode);
-        }else if (statusCode == 400) {
-            System.out.println("Invalid | Empty Input Parameters in the Request : " + response.getStatusCode());
-        }else {
-            fail("Failed to create a book : " + statusCode);
+            Assert.assertEquals(statusCode, 208, "Expected status code 208");
+        } else if (statusCode == 201) {
+            Assert.assertEquals(statusCode, 201, "Expected status code 201");
+        } else if (statusCode == 400) {
+            Assert.assertEquals(statusCode, 400, "Expected status code 400");
+            Assert.assertTrue(responseBody.toLowerCase().contains("invalid input parameters"), "Error message not found in the response");
+        } else {
+            Assert.fail("Failed to create a book with status code: " + statusCode);
         }
-        System.out.println("Response : " + response.asString());
+
+        System.out.println("Response : " + responseBody);
     }
 
     @Test
-    void updateBook(){
+    public void updateBook() {
         String requestBody = """
     {
-        "id": 6,
-        "title": "Jadunama",
+        "id": 1,
+        "title": "Jadma",
         "author": "Javed Akhtar and Arvind Mandloi"
     }
     """;
 
-        Response response = given()
+        Response response = RestAssured.given()
                 .contentType("application/json")
                 .body(requestBody)
                 .when()
-                .put("/api/books/2"); // replace 2 with the actual bookId
+                .put("/api/books/10");
 
         int statusCode = response.getStatusCode();
+        String responseBody = response.asString();
+
+        System.out.println("Response : " + responseBody); // Print the response body
 
         if (statusCode == 200) {
-            System.out.println("Successfully update the book : " + statusCode);
-        }else if(statusCode == 208){
-            System.out.println("Book already exists : " + statusCode);
-        } else if(statusCode == 404){
-            System.out.println("Book is not found : " + statusCode);
-        }else{
-            fail("Failed to update book: " + statusCode);
-        }
-        System.out.println("Response : " + response.asString());
-    }
-
-    @Test
-    void deleteBook() {
-        Response response = given()
-                .when()
-                .delete("/api/books/1"); // replace 1 with the actual bookId
-
-        int statusCode = response.getStatusCode();
-
-        if (statusCode == 200) {
-            System.out.println("Successfully delete the book : " + statusCode);
+            Assert.assertEquals(statusCode, 200, "Expected status code 200");
+        } else if (statusCode == 208) {
+            Assert.assertEquals(statusCode, 208, "Expected status code 208");
+        } else if (statusCode == 400) {
+            Assert.assertEquals(statusCode, 400, "Expected status code 400");
+            Assert.assertTrue(responseBody.toLowerCase().contains("Book id is not matched".toLowerCase()), "Error message not found in the response");
         } else if (statusCode == 403) {
-            System.out.println("Forbidden - User does not have permission to delete the book : " + statusCode);
+            Assert.assertEquals(statusCode, 403, "Expected status code 403");
         } else if (statusCode == 404) {
-            System.out.println("Book is not found : " + statusCode);
+            Assert.assertEquals(statusCode, 404, "Expected status code 404");
         } else {
-            fail("Failed to delete book : " + statusCode);
+            Assert.fail("Failed to update book with status code: " + statusCode);
         }
-        System.out.println("Response : " + response.asString());
+    }
+
+
+
+    @Test
+    public void deleteBook() {
+        Response response = RestAssured.given()
+                .when()
+                .delete("/api/books/1");
+
+        int statusCode = response.getStatusCode();
+        String responseBody = response.asString();
+
+        if (statusCode == 200) {
+            Assert.assertEquals(statusCode, 200, "Expected status code 200");
+        } else if (statusCode == 403) {
+            Assert.assertEquals(statusCode, 403, "Expected status code 403");
+        } else if (statusCode == 404) {
+            Assert.assertEquals(statusCode, 404, "Expected status code 404");
+        } else {
+            Assert.fail("Failed to delete book with status code: " + statusCode);
+        }
+
+        System.out.println("Response : " + responseBody);
     }
 
     @Test
-    void getAllBooks(){
-        //Response will be stored in "response"
-        Response response = get("/api/books");
+    public void getAllBooks() {
+        Response response = RestAssured.get("/api/books");
         int statusCode = response.getStatusCode();
-        if (statusCode == 200) {
-            System.out.println("Successfully Get All Books : " + response.getStatusCode());
-        } else {
-            fail("Fail to get all books : " + statusCode);
-        }
-        System.out.println("Response : " + response.asString());
+        String responseBody = response.asString();
+
+        Assert.assertEquals(statusCode, 200, "Expected status code 200");
+        System.out.println("Response : " + responseBody);
     }
 
     @Test
-    void getBookByID(){
-        Response response = get("/api/books/5"); // replace 5 with the actual bookId
+    public void getBookByID() {
+        Response response = RestAssured.get("/api/books/5");
         int statusCode = response.getStatusCode();
+        String responseBody = response.asString();
+
         if (statusCode == 200) {
-            System.out.println("Successfully Get Book by ID : " + response.getStatusCode());
-        } else if(statusCode == 404){
-            System.out.println("Book is not found : " + statusCode);
-        }else {
-            fail("Fail to get book by ID : " + statusCode);
+            Assert.assertEquals(statusCode, 200, "Expected status code 200");
+        } else if (statusCode == 404) {
+            Assert.assertEquals(statusCode, 404, "Expected status code 404");
+        } else {
+            Assert.fail("Failed to get book by ID with status code: " + statusCode);
         }
-        System.out.println("Response : " + response.asString());
+
+        System.out.println("Response : " + responseBody);
     }
 }
