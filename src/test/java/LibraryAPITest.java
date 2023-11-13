@@ -2,7 +2,6 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.FileInputStream;
@@ -11,8 +10,6 @@ import java.util.Properties;
 
 import static io.restassured.RestAssured.*;
 import static org.testng.Assert.fail;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 
 public class LibraryAPITest {
 
@@ -30,20 +27,21 @@ public class LibraryAPITest {
 
         RestAssured.baseURI = properties.getProperty("baseURI");
         RestAssured.authentication = RestAssured.preemptive().basic(
-                properties.getProperty("adminUsername"),
-                properties.getProperty("adminPassword")
+                properties.getProperty("userUsername"),
+                properties.getProperty("Password")
         );
     }
-//1
+
+    //1
     @Test
     public void testUnauthorizedCreateBook() {
         String requestBody = """
-        {
-            "id": 130,
-            "title": "Unauthorized Book",
-            "author": "Author Name -1"
-        }
-        """;
+                {
+                     "id": 10,
+                     "title": "The Great Gatsby",
+                     "author": "Laetitia Winstanley"
+                }
+                """;
 
         Response response = given()
                 .contentType("application/json")
@@ -52,18 +50,19 @@ public class LibraryAPITest {
                 .post("/api/books");
 
         int statusCode = response.getStatusCode();
-        assertStatusCodeAndPrintResponse(401, "Expected status code 401 (Unauthorized)", response);
+        assertStatusCodeAndPrintResponse(401, "You are not authorized to create the book - Expected status code 401 (Unauthorized)", response);
     }
-//2
+
+    //2
     @Test
     void createNewBook() {
         String requestBody = """
-        {
-            "id": 6,
-            "title": "Jadunama",
-            "author": "Javed Akhtar and Arvind Mandloi"
-        }
-        """;
+                {
+                  "id": 48,
+                  "title": "To Kill a Mockingbird",
+                  "author": "Reine Hallick"
+                }
+                """;
 
         Response response = given()
                 .contentType("application/json")
@@ -73,24 +72,23 @@ public class LibraryAPITest {
 
         int statusCode = response.getStatusCode();
 
-        if (statusCode == 208) {
-            assertStatusCodeAndPrintResponse(208, "Expected status code 208", response);
-        } else if (statusCode == 201) {
-            assertStatusCodeAndPrintResponse(201, "Expected status code 201", response);
+        if (statusCode == 201) {
+            assertStatusCodeAndPrintResponse(201, "Successfully created the book - Expected status code 201", response);
         } else {
             fail("Failed to create a book : " + statusCode);
         }
     }
-//3
+
+    //3
     @Test
     void createNewBookWithEmptyTitle() {
         String requestBody = """
-        {
-            "id": 7,
-            "title": "",
-            "author": "BBB Name"
-        }
-        """;
+                {
+                    "id": 8,
+                    "title": "",
+                    "author": "Sri Garth "
+                }
+                """;
 
         Response response = given()
                 .contentType("application/json")
@@ -102,21 +100,22 @@ public class LibraryAPITest {
         System.out.println(statusCode);
 
         if (statusCode == 400) {
-            assertStatusCodeAndPrintResponse(400, "Expected status code 400", response);
-        }else {
-            fail("Failed to create a book with empty title: " + statusCode);
+            assertStatusCodeAndPrintResponse(400, " Invalid | Empty Input Parameters in the Request - Expected status code 400", response);
+        } else {
+            fail("Actual Status code : " + statusCode);
         }
     }
-//4
+
+    //4
     @Test
     void createDuplicateBook() {
         String requestBody = """
-        {
-            "id": 6,
-            "title": "Jadunama",
-            "author": "Javed Akhtar and Arvind Mandloi"
-        }
-        """;
+                {
+                  "id": 48,
+                  "title": "To Kill a Mockingbird",
+                  "author": "Reine Hallick"
+                }
+                """;
 
         Response response = given()
                 .contentType("application/json")
@@ -127,22 +126,22 @@ public class LibraryAPITest {
         int statusCode = response.getStatusCode();
 
         if (statusCode == 208) {
-            assertStatusCodeAndPrintResponse(208, "Expected status code 208", response);
+            assertStatusCodeAndPrintResponse(208, "Book Already exists - Expected status code 208", response);
         } else {
             fail("Failed to create a duplicate book: " + statusCode);
         }
     }
 
-//5
+    //5
     @Test
     void createBookWithMissingAuthor() {
         String requestBody = """
-        {
-            "id": 8000,
-            "title": "Book Title3",
-            "author": ""
-        }
-        """;
+                {
+                      "id": 8,
+                      "title": "Lion King",
+                      "author": ""
+                }
+                """;
 
         Response response = given()
                 .contentType("application/json")
@@ -155,22 +154,22 @@ public class LibraryAPITest {
         System.out.println(statusCode);
 
         if (statusCode == 400) {
-            assertStatusCodeAndPrintResponse(400, "Expected status code 400", response);
+            assertStatusCodeAndPrintResponse(400, " Invalid | Empty Input Parameters in the Request - Expected status code 400", response);
         } else {
-            fail("Failed to create a book with missing author: " + statusCode);
+            fail("Actual Status code: " + statusCode);
         }
     }
 
-//6
+    //6
     @Test
     void createBookWithMissingId() {
         String requestBody = """
-        {
-            "id": ,
-            "title": "Valid Book",
-            "author": "Author Name"
-        }
-        """;
+                {
+                      "id": ,
+                      "title": "The Catcher in the Rye",
+                      "author": "Noble Nice"
+                }
+                """;
 
         Response response = given()
                 .contentType("application/json")
@@ -183,22 +182,73 @@ public class LibraryAPITest {
         if (statusCode == 201) {
             assertStatusCodeAndPrintResponse(201, "Expected status code 201", response);
         } else {
-            fail("Failed to create a book with valid data: " + statusCode);
+            fail("Actual Status code: " + statusCode);
         }
     }
 
 
+    //7
+    @Test
+    void createBookWithMissingTitleAndAuthor() {
+        String requestBody = """
+                {
+                    "id": 20,
+                    "title": "",
+                    "author": ""
+                }
+                """;
+
+        Response response = given()
+                .contentType("application/json")
+                .body(requestBody)
+                .when()
+                .post("/api/books");
+
+        int statusCode = response.getStatusCode();
+
+        if (statusCode == 400) {
+            assertStatusCodeAndPrintResponse(400, "Invalid | Empty Input Parameters in the Request - Expected status code 400", response);
+        } else {
+            fail("Actual Status code: " + statusCode);
+        }
+    }
+
+    //8
+    @Test
+    void createBookWithSpecialCharactersInTitle() {
+        String requestBody = """
+                {
+                    "id": 13,
+                    "title": "The @#$% Secret",
+                    "author": "John Doe"
+                }
+                """;
+
+        Response response = given()
+                .contentType("application/json")
+                .body(requestBody)
+                .when()
+                .post("/api/books");
+
+        int statusCode = response.getStatusCode();
+
+        if (statusCode == 201) {
+            assertStatusCodeAndPrintResponse(201, "Successfully created a book with special characters in the title - Expected status code 201", response);
+        } else {
+            fail("Actual Status code: " + statusCode);
+        }
+    }
 
 
     @Test
     public void updateBook() {
         String requestBody = """
-    {
-        "id": 1,
-        "title": "Jadma",
-        "author": "Javed Akhtar and Arvind Mandloi"
-    }
-    """;
+                {
+                    "id": 1,
+                    "title": "Jadma",
+                    "author": "Javed Akhtar and Arvind Mandloi"
+                }
+                """;
 
         Response response = RestAssured.given()
                 .contentType("application/json")
@@ -224,7 +274,6 @@ public class LibraryAPITest {
             Assert.fail("Failed to update book with status code: " + statusCode);
         }
     }
-
 
 
     @Test
@@ -277,5 +326,6 @@ public class LibraryAPITest {
     private void assertStatusCodeAndPrintResponse(int expectedStatusCode, String assertionMessage, Response response) {
         Assert.assertEquals(response.getStatusCode(), expectedStatusCode, assertionMessage);
         System.out.println("Response : " + response.asString());
+        System.out.println(assertionMessage);
     }
 }
